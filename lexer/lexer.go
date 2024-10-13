@@ -64,6 +64,12 @@ func (l *Lexer) NextToken() token.Token {
 			// A early exit is needed here because the readIdentifier
 			// already calls the l.readChart() method
 			return tok
+		} else if isDigit(l.ch) {
+			// Only integers are supported nowadays
+			tok.Literal = l.readNumber()
+			tok.Type = token.INT
+
+			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
@@ -77,6 +83,15 @@ func (l *Lexer) readIdentifier() string {
 	position := l.position
 
 	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func (l *Lexer) readNumber() string {
+	position := l.position
+
+	for isDigit(l.ch) {
 		l.readChar()
 	}
 	return l.input[position:l.position]
@@ -97,4 +112,8 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+}
+
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
 }
