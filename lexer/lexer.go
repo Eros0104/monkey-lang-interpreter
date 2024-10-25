@@ -38,12 +38,31 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case '=':
 		tok = newToken(token.ASSIGN, l.ch)
+
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = token.Token{Type: token.EQ, Literal: literal}
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
+
 	case '+':
 		tok = newToken(token.PLUS, l.ch)
 	case '-':
 		tok = newToken(token.MINUS, l.ch)
 	case '!':
-		tok = newToken(token.BANG, l.ch)
+
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = token.Token{Type: token.NOT_EQ, Literal: literal}
+		} else {
+			tok = newToken(token.BANG, l.ch)
+		}
+
 	case '*':
 		tok = newToken(token.ASTERISK, l.ch)
 	case '/':
@@ -74,7 +93,7 @@ func (l *Lexer) NextToken() token.Token {
 			// otherwise, the IDENT token will be used
 			tok.Type = token.LookupIdent(tok.Literal)
 			// A early exit is needed here because the readIdentifier
-			// already calls the l.readChart() method
+			// already calls the l.readChar() method
 			return tok
 		} else if isDigit(l.ch) {
 			// Only integers are supported nowadays
@@ -88,6 +107,7 @@ func (l *Lexer) NextToken() token.Token {
 	}
 
 	l.readChar()
+
 	return tok
 }
 
@@ -97,6 +117,7 @@ func (l *Lexer) readIdentifier() string {
 	for isLetter(l.ch) {
 		l.readChar()
 	}
+
 	return l.input[position:l.position]
 }
 
@@ -106,7 +127,16 @@ func (l *Lexer) readNumber() string {
 	for isDigit(l.ch) {
 		l.readChar()
 	}
+
 	return l.input[position:l.position]
+}
+
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
 }
 
 // this helper function is commonly found in other lexers, can be named as
